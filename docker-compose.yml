@@ -1,0 +1,58 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Complete MSSQL_SA_PASSWORD solo para el contenedor de desarrollo}
+    ports:
+      - "14333:1433"
+    volumes:
+      - aulacita_sql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/1433'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  app:
+    profiles: ["app"]
+    build: .
+    environment:
+      SERVER_PORT: 8080
+      DB_URL: ${DB_URL_DOCKER:-jdbc:sqlserver://sqlserver:1433;databaseName=AulaCitaDB_Real;encrypt=true;trustServerCertificate=true;loginTimeout=5}
+      DB_USER: ${DB_USER:?Configure DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD:?Configure DB_PASSWORD}
+      DB_MIGRATION_USER: ${DB_MIGRATION_USER:?Configure DB_MIGRATION_USER}
+      DB_MIGRATION_PASSWORD: ${DB_MIGRATION_PASSWORD:?Configure DB_MIGRATION_PASSWORD}
+      DB_MIGRATIONS_ENABLED: ${DB_MIGRATIONS_ENABLED:-true}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      AULACITA_PUBLIC_URL: ${AULACITA_PUBLIC_URL:-http://localhost:8080}
+      PASSWORD_RESET_EXPIRATION_MINUTES: ${PASSWORD_RESET_EXPIRATION_MINUTES:-30}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - aulacita_uploads:/app/uploads
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  aulacita_sql_data:
+  aulacita_uploads:

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión escolar | AulaCita</title>
+    <link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+    <script th:src="@{/js/panel.js}" defer></script>
+    <script th:src="@{/js/gestion.js}" defer></script>
+</head>
+<body class="app-shell">
+<header class="app-header">
+    <a class="brand" th:href="@{/panel}"><span class="brand-mark">A</span>AulaCita</a>
+    <div class="header-actions">
+        <button th:replace="~{fragments/navigation :: sidebarToggle}"></button>
+        <div class="user-menu">
+            <a th:href="@{/perfil}">Mi perfil</a>
+            <form method="post" th:action="@{/logout}"><button class="link-button" type="submit">Cerrar sesión</button></form>
+        </div>
+    </div>
+</header>
+<div id="app-layout" class="app-layout">
+    <aside th:replace="~{fragments/navigation :: sidebar('gestion')}"></aside>
+    <main class="dashboard content-wide module-dashboard">
+        <section class="module-hero management-hero">
+            <div>
+                <div class="module-tags"><span class="module-tag">ADMINISTRACIÓN ESCOLAR</span><span class="module-live"><i></i> Datos vinculados al sistema</span></div>
+                <p class="eyebrow">PERSONAS Y COMUNIDAD</p>
+                <h1>Gestión escolar</h1>
+                <p class="muted" id="scope-description">Administra estudiantes, usuarios y relaciones según tu rol.</p>
+            </div>
+        </section>
+        <section class="management-overview" aria-label="Resumen de registros">
+            <article class="management-stat"><span class="management-stat-icon">♙</span><span>Estudiantes</span><strong id="management-students-count">—</strong><small>Registros escolares</small></article>
+            <article class="management-stat"><span class="management-stat-icon">◉</span><span>Docentes</span><strong id="management-teachers-count">—</strong><small>Cuentas habilitadas</small></article>
+            <article class="management-stat"><span class="management-stat-icon">⌂</span><span>Apoderados</span><strong id="management-guardians-count">—</strong><small>Cuentas habilitadas</small></article>
+            <article class="management-stat"><span class="management-stat-icon">↔</span><span>Relaciones</span><strong id="management-relations-count">—</strong><small>Vínculos registrados</small></article>
+        </section>
+        <div id="notice" class="alert" hidden role="status"></div>
+
+        <section class="info-card" id="students-section">
+            <h2>Estudiantes</h2>
+            <form id="student-form" class="booking-grid">
+                <input type="hidden" id="student-id">
+                <label>DNI<input id="student-dni" required pattern="\d{8}" maxlength="8"></label>
+                <label>Código<input id="student-code" maxlength="25"></label>
+                <label>Nombres<input id="student-first" required maxlength="100"></label>
+                <label>Apellido paterno<input id="student-last" required maxlength="100"></label>
+                <label>Apellido materno<input id="student-mother" maxlength="100"></label>
+                <label>Grado / sección<select id="student-grade" required></select></label>
+                <label>Activo<select id="student-active"><option value="true">Sí</option><option value="false">No</option></select></label>
+                <button class="button" type="submit">Guardar estudiante</button>
+                <button class="button button-outline" id="student-reset" type="button">Limpiar</button>
+            </form>
+            <div class="table-scroll" style="margin-top:1.2rem">
+                <table>
+                    <thead><tr><th>DNI</th><th>Nombre</th><th>Grado</th><th>Activo</th><th></th></tr></thead>
+                    <tbody id="students-body"><tr><td colspan="5">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="info-card" id="users-section" hidden>
+            <h2>Usuarios de la institución</h2>
+            <p class="muted small" id="users-hint"></p>
+            <form id="user-form" class="booking-grid">
+                <input type="hidden" id="user-id">
+                <label>Correo<input id="user-email" type="email" required maxlength="254"></label>
+                <label id="password-field">Contraseña inicial<input id="user-password" type="password" minlength="12" maxlength="72"></label>
+                <label>Nombres<input id="user-first" required maxlength="80"></label>
+                <label>Apellido paterno<input id="user-last" required maxlength="60"></label>
+                <label>Apellido materno<input id="user-mother" maxlength="60"></label>
+                <label>Celular<input id="user-phone" type="tel" maxlength="30" autocomplete="tel"></label>
+                <label>Tipo de documento
+                    <select id="user-document-type">
+                        <option value="">Sin especificar</option>
+                        <option value="DNI">DNI</option>
+                        <option value="CE">Carné de extranjería</option>
+                        <option value="Pasaporte">Pasaporte</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </label>
+                <label>Número de documento<input id="user-document-number" maxlength="30"></label>
+                <label>Rol<select id="user-role" required></select></label>
+                <label id="user-active-field" hidden>Activo<select id="user-active"><option value="true">Sí</option><option value="false">No</option></select></label>
+                <button class="button" type="submit" id="user-submit">Crear usuario</button>
+                <button class="button button-outline" id="user-reset" type="button">Nuevo usuario</button>
+            </form>
+            <p class="muted small">Al editar una cuenta puedes actualizar sus datos, rol y estado. El correo de acceso se mantiene fijo para proteger la identidad de la cuenta.</p>
+            <div class="table-scroll" style="margin-top:1.2rem">
+                <table>
+                    <thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Activo</th><th>Acciones</th></tr></thead>
+                    <tbody id="users-body"><tr><td colspan="5">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="info-card" id="relations-section" hidden>
+            <h2>Relaciones estudiante · apoderado</h2>
+            <p class="muted small">La relación habilita al apoderado para reservar citas del estudiante.</p>
+            <form id="relation-form" class="booking-grid">
+                <input type="hidden" id="relation-id">
+                <label>Estudiante<select id="relation-student" required></select></label>
+                <label>Apoderado<select id="relation-guardian" required></select></label>
+                <label>Parentesco<input id="relation-relationship" required maxlength="40" placeholder="Padre, madre, tutor"></label>
+                <label>¿Puede reservar?<select id="relation-can-book"><option value="true">Sí</option><option value="false">No</option></select></label>
+                <button class="button" type="submit">Guardar relación</button>
+                <button class="button button-outline" id="relation-reset" type="button">Limpiar</button>
+            </form>
+            <div class="table-scroll" style="margin-top:1.2rem">
+                <table>
+                    <thead><tr><th>Estudiante</th><th>Apoderado</th><th>Parentesco</th><th>Reserva</th><th>Activa</th><th></th></tr></thead>
+                    <tbody id="relations-body"><tr><td colspan="6">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="info-card" id="broadcast-section" hidden>
+            <h2>Aviso general con modal</h2>
+            <p class="muted small">Solo el super administrador puede enviar avisos que aparecen como modal al ingresar al sistema.</p>
+            <form id="broadcast-form" class="booking-grid">
+                <label>Título<input id="broadcast-title" required maxlength="160" placeholder="Reunión general de apoderados"></label>
+                <label>Dirigido a
+                    <select id="broadcast-role">
+                        <option value="TODOS">Todos los usuarios</option>
+                        <option value="Apoderado">Apoderados</option>
+                        <option value="Docente">Docentes</option>
+                        <option value="Secretaria">Secretaría</option>
+                        <option value="Director">Dirección</option>
+                        <option value="Administrador">Administradores</option>
+                    </select>
+                </label>
+                <label class="field-wide">Mensaje<textarea id="broadcast-message" required maxlength="1000" rows="3"></textarea></label>
+                <button class="button" type="submit">Enviar aviso general</button>
+            </form>
+        </section>
+
+        <section class="info-card" id="images-section" hidden>
+            <h2>Imágenes de la institución</h2>
+            <p class="muted small">Solo el super administrador. Claves: logo, hero, galeria_1, galeria_2, galeria_3.</p>
+            <form id="image-form" class="booking-grid">
+                <label>Clave
+                    <select id="image-key" required>
+                        <option value="logo">logo</option>
+                        <option value="hero">hero</option>
+                        <option value="galeria_1">galeria_1</option>
+                        <option value="galeria_2">galeria_2</option>
+                        <option value="galeria_3">galeria_3</option>
+                    </select>
+                </label>
+                <label>Archivo<input id="image-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
+                <button class="button" type="submit">Subir / reemplazar</button>
+            </form>
+            <div id="images-preview" class="metric-grid" style="margin-top:1rem"></div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

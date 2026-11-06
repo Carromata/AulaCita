@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AulaCita | Reuniones con propósito</title>
+    <link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+</head>
+<body>
+<header class="public-header">
+    <a class="brand" th:href="@{/}"><span class="brand-mark" aria-hidden="true">A</span>AulaCita</a>
+    <nav aria-label="Navegación principal">
+        <a th:href="@{/verificar-alumno}">Verificar alumno</a>
+        <a th:href="@{/sobre}">Sobre el sistema</a>
+        <a class="button button-small" th:href="@{/login}">Ingresar</a>
+    </nav>
+</header>
+<main class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow"><span class="hero-live-dot" aria-hidden="true"></span> ESPACIO DE COORDINACIÓN ESCOLAR</p>
+        <h1>Familias y docentes, mejor conectados.</h1>
+        <p class="lead">Organiza tus citas, consulta horarios y da seguimiento a cada reunión en un solo lugar.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.8rem;align-items:center">
+            <a class="button" th:href="@{/login}">Ingresar a AulaCita <span aria-hidden="true">→</span></a>
+            <a class="button button-outline" th:href="@{/verificar-alumno}">Verificar alumno por DNI</a>
+        </div>
+        <p class="muted small">Acceso para cuentas habilitadas por la institución.</p>
+        <div class="public-feature-row" aria-label="Funciones de AulaCita">
+            <article class="public-feature">
+                <span class="public-feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m4 4h3"/></svg>
+                </span>
+                <span><strong>Agenda coordinada</strong><small>Solicitudes y horarios disponibles</small></span>
+            </article>
+            <article class="public-feature">
+                <span class="public-feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                </span>
+                <span><strong>Avisos directos</strong><small>Notificaciones de citas y la institución</small></span>
+            </article>
+            <article class="public-feature">
+                <span class="public-feature-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0M19 8l2 2 3-3"/></svg>
+                </span>
+                <span><strong>Acceso por rol</strong><small>Información según tu cuenta</small></span>
+            </article>
+        </div>
+    </div>
+    <aside class="hero-card public-hero-card" aria-label="Coordinación educativa">
+        <div class="public-orbit public-orbit-one" aria-hidden="true"></div>
+        <div class="public-orbit public-orbit-two" aria-hidden="true"></div>
+        <div class="public-hero-topline"><span class="public-hero-symbol">A</span><span class="public-hero-status"><i></i> ESPACIO EDUCATIVO</span></div>
+        <div class="public-hero-calendar" aria-hidden="true">
+            <div class="public-calendar-head"><span>REUNIONES</span><span>✦</span></div>
+            <div class="public-calendar-line"><i></i><span></span><b></b></div>
+            <div class="public-calendar-line"><i></i><span></span><b></b></div>
+            <div class="public-calendar-line"><i></i><span></span><b></b></div>
+        </div>
+        <div class="public-hero-caption">
+            <p class="eyebrow">UN ENCUENTRO A LA VEZ</p>
+            <h2>Cada conversación ayuda a crecer.</h2>
+            <p>Coordina una entrevista, confirma el horario y mantén la comunicación con tu comunidad escolar.</p>
+        </div>
+    </aside>
+</main>
+<footer class="public-footer"><span>AulaCita</span><span>Plataforma de coordinación educativa</span></footer>
+</body>
+</html>

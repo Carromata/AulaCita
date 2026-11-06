@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notificaciones | AulaCita</title><link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+    <script th:src="@{/js/notifications.js}" defer></script>
+    <script th:src="@{/js/panel.js}" defer></script>
+</head>
+<body class="app-shell">
+<header class="app-header">
+    <a class="brand" th:href="@{/panel}"><span class="brand-mark">A</span>AulaCita</a>
+    <div class="header-actions"><button th:replace="~{fragments/navigation :: sidebarToggle}"></button><div class="user-menu"><a th:href="@{/perfil}">Mi perfil</a><form method="post" th:action="@{/logout}"><button class="link-button" type="submit">Cerrar sesión</button></form></div></div>
+</header>
+<div id="app-layout" class="app-layout">
+    <aside th:replace="~{fragments/navigation :: sidebar('notificaciones')}"></aside>
+    <main class="dashboard content-wide module-dashboard">
+        <a class="text-link" th:href="@{/panel}">← Panel</a>
+        <p class="eyebrow">CENTRO DE AVISOS</p>
+        <h1>Notificaciones</h1>
+        <p class="muted">Aquí llegan las novedades de tus citas y los avisos de la institución.</p>
+        <div id="notice" class="alert" hidden role="status"></div>
+
+        <section class="info-card" id="broadcast-section" th:if="${currentRole == 'SUPERADMINISTRADOR'}">
+            <h2>Enviar aviso general</h2>
+            <p class="muted small">El aviso aparecerá como modal la próxima vez que el usuario ingrese al sistema.</p>
+            <form id="broadcast-form" class="booking-grid">
+                <label>Título<input id="broadcast-title" required maxlength="160" placeholder="Reunión general de apoderados"></label>
+                <label>Dirigido a
+                    <select id="broadcast-role">
+                        <option value="TODOS">Todos los usuarios</option>
+                        <option value="Apoderado">Apoderados</option>
+                        <option value="Docente">Docentes</option>
+                        <option value="Secretaria">Secretaría</option>
+                        <option value="Director">Dirección</option>
+                        <option value="Administrador">Administradores</option>
+                    </select>
+                </label>
+                <label class="field-wide">Mensaje<textarea id="broadcast-message" required maxlength="1000" rows="3" placeholder="Detalle del aviso"></textarea></label>
+                <button class="button" type="submit">Enviar aviso</button>
+            </form>
+        </section>
+
+        <section class="table-card">
+            <div class="table-heading">
+                <h2>Tus avisos</h2>
+                <div class="toolbar-inline">
+                    <select id="notification-filter" class="compact-select" aria-label="Filtrar notificaciones">
+                        <option value="all">Todas</option>
+                        <option value="unread">No leídas</option>
+                    </select>
+                    <button id="mark-all-read" class="button button-outline button-small" type="button">Marcar todas como leídas</button>
+                </div>
+            </div>
+            <div id="notification-list" class="notification-list">
+                <p class="muted empty-state">Cargando notificaciones…</p>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

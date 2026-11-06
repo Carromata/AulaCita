@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Citas | AulaCita</title><link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+    <script th:src="@{/js/citas.js}" defer></script>
+    <script th:src="@{/js/panel.js}" defer></script>
+</head>
+<body class="app-shell">
+<header class="app-header">
+    <a class="brand" th:href="@{/panel}"><span class="brand-mark">A</span>AulaCita</a>
+    <div class="header-actions"><button th:replace="~{fragments/navigation :: sidebarToggle}"></button><div class="user-menu"><a th:href="@{/perfil}">Mi perfil</a><form method="post" th:action="@{/logout}"><button class="link-button" type="submit">Cerrar sesión</button></form></div></div>
+</header>
+<div id="app-layout" class="app-layout">
+<aside th:replace="~{fragments/navigation :: sidebar('citas')}"></aside>
+<main class="dashboard content-wide module-dashboard">
+    <section class="module-hero appointments-hero">
+        <div>
+            <div class="module-tags">
+                <span class="module-tag">AGENDA ESCOLAR</span>
+                <span class="module-live"><i></i> Horarios y solicitudes conectados</span>
+            </div>
+            <p class="eyebrow" th:if="${currentRole == 'APODERADO'}">PORTAL DE FAMILIAS</p>
+            <p class="eyebrow" th:if="${currentRole == 'DOCENTE'}">PORTAL DOCENTE</p>
+            <p class="eyebrow" th:if="${currentRole != 'APODERADO' and currentRole != 'DOCENTE'}">COORDINACIÓN INSTITUCIONAL</p>
+            <h1 th:if="${currentRole == 'APODERADO'}">Citas de mi familia</h1>
+            <h1 th:if="${currentRole == 'DOCENTE'}">Mi agenda de entrevistas</h1>
+            <h1 th:if="${currentRole != 'APODERADO' and currentRole != 'DOCENTE'}">Agenda escolar</h1>
+            <p class="muted" th:if="${currentRole == 'APODERADO'}">Consulta las entrevistas de tus estudiantes vinculados y solicita un horario disponible.</p>
+            <p class="muted" th:if="${currentRole == 'DOCENTE'}">Administra tus entrevistas, confirma solicitudes y configura tu disponibilidad.</p>
+            <p class="muted" th:if="${currentRole != 'APODERADO' and currentRole != 'DOCENTE'}">Coordina entrevistas escolares y revisa las solicitudes dentro de tus permisos.</p>
+        </div>
+        <a class="button" href="#booking" id="new-appointment-link" hidden>＋ Nueva cita</a>
+    </section>
+    <div id="notice" class="alert" hidden role="status"></div>
+
+    <section class="appointment-overview" aria-label="Resumen de citas">
+        <article class="overview-card overview-card-blue"><span class="overview-icon" aria-hidden="true">▦</span><span class="overview-label">En agenda</span><strong id="appointment-total">—</strong><small>Según tus permisos</small></article>
+        <article class="overview-card overview-card-amber"><span class="overview-icon" aria-hidden="true">◷</span><span class="overview-label">Por confirmar</span><strong id="appointment-pending">—</strong><small>Solicitudes pendientes</small></article>
+        <article class="overview-card overview-card-green"><span class="overview-icon" aria-hidden="true">✓</span><span class="overview-label">Confirmadas</span><strong id="appointment-confirmed">—</strong><small>Entrevistas confirmadas</small></article>
+        <article class="overview-card overview-card-indigo"><span class="overview-icon" aria-hidden="true">⌕</span><span class="overview-label">Próxima cita</span><strong id="appointment-next">—</strong><small>Fecha más cercana</small></article>
+    </section>
+
+    <section id="booking" class="info-card" hidden>
+        <h2>Solicitar una cita</h2>
+        <p class="muted small" id="booking-hint"></p>
+        <form id="booking-form" class="booking-grid">
+            <label>Estudiante / relación<select id="student" required></select></label>
+            <label>Docente<select id="teacher" required></select></label>
+            <label>Fecha<input id="date" type="date" required></label>
+            <label>Horario disponible<select id="slot" required></select></label>
+            <label>Modalidad<select id="modality" required><option value="PRESENCIAL">Presencial</option><option value="VIRTUAL">Virtual</option></select></label>
+            <label>Motivo<input id="reason" required maxlength="500" placeholder="Motivo de la reunión"></label>
+            <label class="field-wide">Comentario adicional (opcional)<textarea id="comment" maxlength="1000" rows="2"></textarea></label>
+            <button class="button" type="submit">Solicitar cita</button>
+        </form>
+    </section>
+
+    <section id="calendar-panel" class="info-card calendar-panel">
+        <div class="table-heading calendar-heading">
+            <div>
+                <p class="eyebrow">VISTA SEMANAL · HORA DE LIMA</p>
+                <h2 id="calendar-week-label">Agenda de la semana</h2>
+            </div>
+            <div class="calendar-controls">
+                <button id="calendar-previous" class="button button-outline button-small" type="button" aria-label="Semana anterior">←</button>
+                <button id="calendar-today" class="button button-outline button-small" type="button">Hoy</button>
+                <button id="calendar-next" class="button button-outline button-small" type="button" aria-label="Semana siguiente">→</button>
+            </div>
+        </div>
+        <div id="calendar-week" class="calendar-week-grid" aria-live="polite"></div>
+        <p class="muted small">Descarga el archivo de calendario desde cada cita para importarlo en Google Calendar, Outlook u otra aplicación compatible.</p>
+    </section>
+
+    <section id="availability-section" class="info-card" hidden>
+        <h2 id="availability-title">Mi disponibilidad semanal</h2>
+        <p class="muted small" id="availability-hint">Los apoderados solo podrán reservar dentro de los horarios activos que registres aquí.</p>
+        <form id="availability-form" class="booking-grid">
+            <input id="availability-id" type="hidden">
+            <label id="availability-teacher-field" hidden>Docente<select id="availability-teacher"></select></label>
+            <label>Día
+                <select id="availability-day" required>
+                    <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option>
+                    <option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+                    <option value="7">Domingo</option>
+                </select>
+            </label>
+            <label>Desde<input id="availability-start" type="time" required></label>
+            <label>Hasta<input id="availability-end" type="time" required></label>
+            <label>Vigente desde<input id="availability-from" type="date" required></label>
+            <label>Vigente hasta (opcional)<input id="availability-until" type="date"></label>
+            <label>Duración por cita
+                <select id="availability-duration">
+                    <option value="15">15 minutos</option><option value="20">20 minutos</option>
+                    <option value="30" selected>30 minutos</option><option value="45">45 minutos</option>
+                    <option value="60">60 minutos</option>
+                </select>
+            </label>
+            <label id="availability-active-field" hidden>Estado
+                <select id="availability-active"><option value="true">Activo</option><option value="false">Desactivado</option></select>
+            </label>
+            <button class="button" id="availability-submit" type="submit">Agregar horario</button>
+            <button class="button button-outline" id="availability-reset" type="button" hidden>Cancelar edición</button>
+        </form>
+        <div class="table-scroll" style="margin-top:1.2rem">
+            <table>
+                <thead><tr><th>Docente</th><th>Día</th><th>Horario</th><th>Vigencia</th><th>Duración</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody id="availability-body"><tr><td colspan="7">Sin horarios registrados.</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="table-card appointments-card">
+        <div class="table-heading appointments-toolbar">
+            <div><p class="eyebrow">SEGUIMIENTO</p><h2>Solicitudes y entrevistas</h2><p class="muted small">Consulta, filtra y administra las citas permitidas para tu cuenta.</p></div>
+            <div class="appointment-toolbar-actions">
+                <label class="appointment-search"><span aria-hidden="true">⌕</span><input id="appointment-search" type="search" placeholder="Buscar estudiante, docente o código" aria-label="Buscar citas"></label>
+                <select id="appointment-filter" class="compact-select" aria-label="Filtrar por estado">
+                    <option value="TODAS">Todos los estados</option><option value="Pendiente">Pendientes</option><option value="Confirmada">Confirmadas</option><option value="Completada">Completadas</option><option value="Cancelada">Canceladas</option>
+                </select>
+                <button id="refresh" class="button button-outline button-small" type="button">↻ Actualizar</button>
+            </div>
+        </div>
+        <div class="appointments-list" id="appointments" aria-live="polite">
+            <p class="muted empty-state">Cargando citas…</p>
+        </div>
+    </section>
+</main>
+</div>
+
+<div id="image-modal" class="modal-backdrop" hidden>
+    <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">ADJUNTOS DE LA CITA</p>
+                <h2 id="image-modal-title">Imágenes</h2>
+                <p class="muted small" id="image-modal-subtitle"></p>
+            </div>
+            <button id="image-modal-close" class="modal-close" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="image-gallery" class="image-gallery"><p class="muted">Cargando imágenes…</p></div>
+            <form id="image-upload-form" class="upload-row">
+                <input id="image-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+                <button class="button button-small" type="submit">Subir imagen</button>
+            </form>
+            <p class="muted small">Formatos JPG, PNG, WEBP o GIF. Tamaño máximo 3 MB.</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

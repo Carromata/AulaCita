@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel | AulaCita</title><link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+    <script th:src="@{/js/panel.js}" defer></script>
+</head>
+<body class="app-shell">
+<header class="app-header">
+    <a class="brand" th:href="@{/panel}"><span class="brand-mark">A</span>AulaCita</a>
+    <div class="header-actions">
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="main-sidebar" aria-expanded="true" aria-label="Ocultar menú">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="toggle-label">Ocultar menú</span>
+        </button>
+        <div class="user-menu"><span class="user-avatar" aria-hidden="true" th:text="${#strings.substring(nombre,0,1)}">U</span><span class="user-name" th:text="${nombre}">Usuario</span><span class="role-pill" th:text="${rol}">rol</span>
+        <form method="post" th:action="@{/logout}"><button class="link-button" type="submit">Cerrar sesión</button></form>
+        </div>
+    </div>
+</header>
+<div id="app-layout" class="app-layout">
+    <aside th:replace="~{fragments/navigation :: sidebar('panel')}"></aside>
+    <main class="dashboard">
+        <section class="dashboard-welcome">
+            <div class="welcome-copy"><p class="eyebrow"><span class="welcome-sparkle" aria-hidden="true">✦</span> TU ESPACIO · <span th:text="${rol}">USUARIO</span></p>
+                <h1>Hola, <span th:text="${nombre}">Usuario</span></h1>
+                <p class="welcome-description">Todo lo importante de tu actividad, en un solo lugar.</p>
+            </div>
+            <div class="welcome-status"><span class="status-orbit" aria-hidden="true"><span></span></span><div><strong>Tu espacio está al día</strong><small>Información conectada al sistema</small></div></div>
+        </section>
+        <section class="metric-grid" aria-label="Indicadores">
+            <article class="metric-card" th:each="item : ${metricas}">
+                <span class="metric-mark" aria-hidden="true"></span>
+                <span class="metric-label" th:text="${item.key}">Indicador</span>
+                <strong class="metric-value" th:text="${item.value}">0</strong>
+                <span class="metric-caption"><span class="caption-dot" aria-hidden="true"></span> Actualizado desde el sistema</span>
+            </article>
+        </section>
+        <section class="dashboard-columns">
+            <section class="table-card upcoming-card" aria-labelledby="upcoming-title">
+                <div class="table-heading">
+                    <div><p class="eyebrow">AGENDA EN VIVO</p><h2 id="upcoming-title">Próximas citas</h2></div>
+                    <a class="button button-outline button-small" th:if="${currentRole != 'DIRECTOR'}" th:href="@{/citas}">Ver agenda</a>
+                    <a class="button button-outline button-small" th:if="${currentRole == 'DIRECTOR'}" th:href="@{/reportes}">Ver reportes</a>
+                </div>
+                <div id="dashboard-appointments" class="dashboard-appointment-list"
+                     th:attr="data-role=${currentRole}">
+                    <p class="muted empty-state">Cargando tus próximas citas…</p>
+                </div>
+            </section>
+            <aside class="dashboard-side-column">
+                <section class="info-card dashboard-notice-card">
+                    <p class="eyebrow">CENTRO DE AVISOS</p>
+                    <h2>Notificaciones recientes</h2>
+                    <div id="dashboard-notifications" class="dashboard-notice-list">
+                        <p class="muted small">Cargando notificaciones…</p>
+                    </div>
+                    <a class="text-link" th:href="@{/notificaciones}">Ir a notificaciones →</a>
+                </section>
+                <section class="info-card dashboard-actions">
+                    <p class="eyebrow">ACCESOS SEGÚN TU ROL</p>
+                    <h2>Acciones disponibles</h2>
+                    <a class="dashboard-action-link" th:if="${currentRole != 'DIRECTOR'}" th:href="@{/citas}">
+                        <span class="dashboard-action-icon" aria-hidden="true">＋</span>
+                        <span><strong>Coordinar una cita</strong><small>Revisar solicitudes y disponibilidad</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="dashboard-action-link" th:if="${currentRole == 'ADMINISTRADOR' or currentRole == 'SUPERADMINISTRADOR' or currentRole == 'SECRETARIA'}" th:href="@{/gestion}">
+                        <span class="dashboard-action-icon" aria-hidden="true">⌘</span>
+                        <span><strong>Gestión escolar</strong><small>Estudiantes, usuarios y relaciones permitidas</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="dashboard-action-link" th:if="${currentRole == 'ADMINISTRADOR' or currentRole == 'SUPERADMINISTRADOR' or currentRole == 'SECRETARIA' or currentRole == 'DIRECTOR'}" th:href="@{/reportes}">
+                        <span class="dashboard-action-icon" aria-hidden="true">↗</span>
+                        <span><strong>Reportes</strong><small>Consulta el resumen de citas</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="dashboard-action-link" th:if="${currentRole == 'SUPERADMINISTRADOR'}" th:href="@{/notificaciones}">
+                        <span class="dashboard-action-icon" aria-hidden="true">♧</span>
+                        <span><strong>Aviso institucional</strong><small>Enviar una notificación general</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="dashboard-action-link" th:if="${currentRole == 'DOCENTE'}" th:href="@{/citas#availability-section}">
+                        <span class="dashboard-action-icon" aria-hidden="true">◷</span>
+                        <span><strong>Mi disponibilidad</strong><small>Configurar horarios para entrevistas</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="dashboard-action-link" th:href="@{/perfil}">
+                        <span class="dashboard-action-icon" aria-hidden="true">◎</span>
+                        <span><strong>Mi cuenta</strong><small>Actualizar contraseña y seguridad</small></span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                </section>
+            </aside>
+        </section>
+        <section class="action-card" id="ayuda">
+            <div class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13H4V6a1 1 0 0 1 1-1zm3 8h3m-3 4h7"/></svg></div>
+            <div class="action-copy"><span class="action-kicker">SIGUIENTE PASO</span>
+                <h2 th:text="${currentRole == 'DIRECTOR' ? 'Tus reportes están disponibles' : 'Tu agenda te espera'}">Tu agenda te espera</h2>
+                <p class="muted" th:text="${currentRole == 'DIRECTOR' ? 'Consulta el resumen agregado de citas de la institución.' : 'Revisa las citas y mantén cada encuentro en marcha.'}">Revisa las citas y mantén cada encuentro en marcha.</p>
+            </div>
+            <a class="button action-button" th:if="${currentRole != 'DIRECTOR'}" th:href="@{/citas}">Ir a mis citas <span aria-hidden="true">→</span></a>
+            <a class="button action-button" th:if="${currentRole == 'DIRECTOR'}" th:href="@{/reportes}">Ir a reportes <span aria-hidden="true">→</span></a>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: AulaCita API
+  version: 1.0.0
+  description: API HTTP de gestión de agenda. Sesión del mismo origen; fechas escolares en America/Lima.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Desarrollo local
+security:
+  - sessionCookie: []
+paths:
+  /auth/me:
+    get:
+      summary: Usuario de la sesión
+      responses:
+        "200":
+          description: Usuario actual.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Envelope"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+  /auth/perfil:
+    get:
+      summary: Consultar el perfil propio
+      responses:
+        "200":
+          description: Datos personales y de contacto del usuario autenticado.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Envelope"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    put:
+      summary: Actualizar datos personales y de contacto propios
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: {type: string, maxLength: 80}
+                lastName: {type: string, maxLength: 60}
+                motherLastName: {type: [string, "null"], maxLength: 60}
+                phone: {type: [string, "null"], maxLength: 30}
+                documentType: {type: [string, "null"], maxLength: 20}
+                documentNumber: {type: [string, "null"], maxLength: 30}
+      responses:
+        "200": {description: Perfil actualizado; correo y rol permanecen sin cambios.}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+  /auth/cambiar-contrasena:
+    post:
+      summary: Cambiar la contraseña propia
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: {type: string, maxLength: 1024}
+                newPassword: {type: string, minLength: 12, maxLength: 72}
+      responses:
+        "200": {description: Contraseña actualizada.}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+  /sistema/salud:
+    get:
+      summary: Comprobar conectividad SQL
+      responses:
+        "200":
+          description: Conectividad correcta.
+          content:
+            application/json:
+              example: {data: {status: ok, database: connected}}
+        "500": {$ref: "#/components/responses/ServerError"}
+  /mis-estudiantes:
+    get:
+      summary: Estudiantes vinculados al apoderado
+      responses:
+        "200": {description: Relaciones propias.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+  /docentes:
+    get:
+      summary: Docentes habilitados
+      responses:
+        "200": {description: Listado de docentes habilitados.}
+  /disponibilidades:
+    get:
+      summary: Buscar horarios libres
+      parameters:
+        - {name: docenteId, in: query, required: true, schema: {type: integer}}
+        - {name: fecha, in: query, required: true, schema: {type: string, format: date}}
+        - {name: relacionId, in: query, required: false, schema: {type: integer}}
+      responses:
+        "200": {description: Horarios completos disponibles en hora local.}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      summary: Agregar disponibilidad docente
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dayOfWeek, startTime, endTime, validFrom, durationMinutes]
+              properties:
+                teacherId: {type: integer}
+                dayOfWeek: {type: integer, minimum: 1, maximum: 7}
+                startTime: {type: string, format: time}
+                endTime: {type: string, format: time}
+                validFrom: {type: string, format: date}
+                validUntil: {type: [string, "null"], format: date}
+                durationMinutes: {type: integer, minimum: 5, maximum: 240}
+      responses:
+        "201": {description: Disponibilidad guardada.}
+        "400": {$ref: "#/components/responses/BadRequest"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /disponibilidades/mias:
+    get:
+      summary: Consultar agenda propia o lista de gestión
+      responses:
+        "200": {description: Disponibilidades activas y futuras.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+  /bloqueos:
+    get:
+      summary: Consultar bloqueos
+      parameters:
+        - {name: desde, in: query, required: true, schema: {type: string, format: date}}
+        - {name: hasta, in: query, required: true, schema: {type: string, format: date}}
+      responses:
+        "200": {description: Bloqueos de la agenda propia o lista administrativa.}
+    post:
+      summary: Agregar bloqueo futuro
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, startTime, endTime, reason]
+              properties:
+                teacherId: {type: integer}
+                date: {type: string, format: date}
+                startTime: {type: string, format: time}
+                endTime: {type: string, format: time}
+                reason: {type: string, maxLength: 300}
+      responses:
+        "201": {description: Bloqueo registrado.}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas:
+    get:
+      summary: Consultar citas permitidas por rol
+      parameters:
+        - {name: pagina, in: query, schema: {type: integer, minimum: 0, default: 0}}
+        - {name: limite, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      responses:
+        "200": {description: Página de citas; apoderados y docentes solo ven registros propios.}
+    post:
+      summary: Reservar un turno
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentGuardianRelationId, teacherId, date, startTime, modality, reason]
+              properties:
+                studentGuardianRelationId: {type: integer}
+                teacherId: {type: integer}
+                date: {type: string, format: date}
+                startTime: {type: string, format: time}
+                modality: {type: string, enum: [PRESENCIAL, VIRTUAL]}
+                reason: {type: string, maxLength: 500}
+                comment: {type: string, maxLength: 1000}
+      responses:
+        "201": {description: Solicitud en estado Pendiente.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas/{id}/confirmar:
+    post:
+      summary: Confirmar cita pendiente
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      parameters:
+        - {$ref: "#/components/parameters/AppointmentId"}
+        - {name: If-Match, in: header, required: true, schema: {type: string, format: byte}}
+      responses:
+        "200": {description: Cita confirmada.}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas/{id}/cancelar:
+    post:
+      summary: Cancelar cita activa futura
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      parameters:
+        - {$ref: "#/components/parameters/AppointmentId"}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, version]
+              properties:
+                reason: {type: string, maxLength: 500}
+                version: {type: string, format: byte}
+      responses:
+        "200": {description: Cancelada; horario liberado.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas/{id}/reprogramar:
+    post:
+      summary: Reprogramar atómicamente
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      parameters:
+        - {$ref: "#/components/parameters/AppointmentId"}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, replacement]
+              properties:
+                version: {type: string, format: byte}
+                replacement: {$ref: "#/components/schemas/Booking"}
+      responses:
+        "201": {description: Nueva cita creada; la anterior queda cancelada con referencia.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas/{id}/asistencia:
+    post:
+      summary: Registrar asistencia y cerrar cita
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      parameters:
+        - {$ref: "#/components/parameters/AppointmentId"}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attended, version]
+              properties:
+                attended: {type: boolean}
+                observation: {type: string, maxLength: 1000}
+                version: {type: string, format: byte}
+      responses:
+        "200": {description: Estado, asistencia e historial guardados en una transacción.}
+        "409": {$ref: "#/components/responses/Conflict"}
+  /citas/{id}/historial:
+    get:
+      summary: Consultar movimientos de una cita
+      parameters:
+        - {$ref: "#/components/parameters/AppointmentId"}
+      responses:
+        "200": {description: Eventos de historial visibles para el usuario.}
+        "403": {$ref: "#/components/responses/Forbidden"}
+  /reportes/resumen:
+    get:
+      summary: Conteo real de citas por estado
+      parameters:
+        - {name: desde, in: query, required: true, schema: {type: string, format: date}}
+        - {name: hasta, in: query, required: true, schema: {type: string, format: date}}
+      responses:
+        "200": {        description: Agregado limitado al rango consultado.
+        content:
+          application/json:
+            example:
+              data:
+                from: "2030-04-01"
+                to: "2030-04-30"
+                appointmentsByStatus:
+                  - {status: Confirmada, count: 12}
+                  - {status: Pendiente, count: 4}}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "400": {$ref: "#/components/responses/BadRequest"}
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+  parameters:
+    AppointmentId:
+      name: id
+      in: path
+      required: true
+      schema: {type: integer, minimum: 1}
+  schemas:
+    Envelope:
+      type: object
+      required: [data]
+      properties:
+        data: {type: object}
+    Booking:
+      type: object
+      required: [studentGuardianRelationId, teacherId, date, startTime, modality, reason]
+      properties:
+        studentGuardianRelationId: {type: integer}
+        teacherId: {type: integer}
+        date: {type: string, format: date}
+        startTime: {type: string, format: time}
+        modality: {type: string, enum: [PRESENCIAL, VIRTUAL]}
+        reason: {type: string, maxLength: 500}
+        comment: {type: string, maxLength: 1000}
+    Error:
+      type: object
+      required: [status, message, details]
+      properties:
+        status: {type: integer}
+        message: {type: string}
+        details:
+          type: array
+          items: {type: string}
+  responses:
+    BadRequest:
+      description: Datos no válidos.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    Unauthorized:
+      description: Sesión requerida o autenticación fallida.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    Forbidden:
+      description: Rol o propiedad insuficiente.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    Conflict:
+      description: Horario ocupado o versión concurrente obsoleta.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+    ServerError:
+      description: Error interno sin detalles SQL en la respuesta.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}

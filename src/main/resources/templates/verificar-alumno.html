@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verificar alumno | AulaCita</title>
+    <link rel="stylesheet" th:href="@{/css/aulacita.css(v=20261106-glass)}">
+</head>
+<body>
+<header class="public-header">
+    <a class="brand" th:href="@{/}"><span class="brand-mark" aria-hidden="true">A</span>AulaCita</a>
+    <nav aria-label="Navegación principal">
+        <a th:href="@{/verificar-alumno}">Verificar alumno</a>
+        <a th:href="@{/sobre}">Sobre el sistema</a>
+        <a class="button button-small" th:href="@{/login}">Ingresar</a>
+    </nav>
+</header>
+<main class="content narrow">
+    <p class="eyebrow">CONSULTA INSTITUCIONAL</p>
+    <h1>Verificar alumno por DNI</h1>
+    <p class="muted">Ingresa el DNI del estudiante para comprobar si está registrado en la institución.</p>
+    <section class="info-card">
+        <form id="verify-form" class="booking-grid">
+            <label>DNI del estudiante
+                <input id="dni" name="dni" inputmode="numeric" pattern="\d{8}" maxlength="8" minlength="8" required placeholder="8 dígitos">
+            </label>
+            <button class="button" type="submit">Verificar</button>
+        </form>
+        <div id="notice" class="alert" hidden role="status"></div>
+        <div id="result" class="info-card" hidden>
+            <h2 id="result-title">Resultado</h2>
+            <p id="result-body" class="muted"></p>
+        </div>
+    </section>
+</main>
+<footer class="public-footer"><span>AulaCita</span><span>Verificación de matrícula</span></footer>
+<script th:src="@{/js/verificar.js}" defer></script>
+</body>
+</html>
